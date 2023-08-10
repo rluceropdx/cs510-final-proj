@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        body {
+            font-family: Arial,serif;
+        }
+
+        #footer {
+            position: fixed;
+            bottom: 10px;
+        }
+    </style>
+    <title>NASA Image Stitcher</title>
+</head>
+
+<body>
+    <h1>User Stitches</h1>
+
+    {% if logged_in %}
+    <span style="position: absolute; right: 10px; top: 10px; text-align: right;">
+        {{user_email}}
+    </span>
+    {% endif %}
+
+    <div id="content" style="text-align: center">
+        {% block content %}
+            {% for data in data_array %}
+                <br /><br />
+                <h2 style="margin-bottom: 0">{{data.search_terms}}</h2>
+                <img src="/display_stitch/{{data.id}}" alt="" />
+                <br />(created: {{data.created_on}}) <button onclick="delete_stitch('{{data.id}}')">Delete</button>
+                <br /><br />
+            {% endfor %}
+        {% endblock content %}
+    </div>
+
+    <div id="footer">
+        {% block footer %}
+        &copy; Copyright 2023 by <a href="http://github.com/rluceropdx/" target="_blank">{{ name }}</a>.
+        {% endblock footer %}
+    </div>
+
+    <script>
+        delete_stitch = (stitch_id) => {
+            const result = confirm("Are you sure you want to delete this image?");
+            if (result) {
+                const options = {
+                    method: 'POST',
+                };
+                fetch('/delete_stitch/' + stitch_id, options)
+                    .then(response => {
+                        if (response.ok) {
+                            self.location = '/display_saved_stitches';
+                        }
+                    });
+            }
+        }
+    </script>
+
+</body>
+</html>

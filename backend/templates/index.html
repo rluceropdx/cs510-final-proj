@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        body {
+            font-family: Arial,serif;
+        }
+        #footer {
+            position: fixed;
+            bottom: 10px;
+        }
+
+        #floating-save-button {
+            position: fixed;
+            top: 60px; /* Adjust this value to set the distance from the bottom */
+            right: 10px; /* Adjust this value to set the distance from the right */
+            z-index: 9999; /* Make sure the button stays above other elements */
+        }
+
+        /* Styling for the button (optional, you can customize as needed) */
+        #floating-save-button button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 25px;
+        }
+
+        #floating-save-button button:hover {
+            background-color: #45a049;
+        }
+
+        #working {
+             top: 50%;
+             left: 50%;
+             width: 30em;
+             height: 100px;
+             margin-top: -9em;
+             margin-left: -15em;
+             border: 1px solid #666;
+             background-color: #4CAF50;
+             position: fixed;
+            font-size: 25px;
+            font-family: Arial,serif;
+            text-align: center;
+            display: none;
+            padding-top: 50px;
+            border-radius: 20px;
+         }
+    </style>
+    <title>NASA Image Stitcher</title>
+</head>
+
+<body>
+<h1>NASA Image Results{% if cache_exists %} (cached){% endif %}: {{ search_content }}</h1>
+<form method="get" id="search_form">
+    <label for="search_field"></label><input type="text" value="" placeholder="search nasa images" id="search_field" style="font-size: 25px" autofocus>
+    <button style="font-size: 25px">Search</button>
+</form>
+
+{% if logged_in %}
+<span style="position: absolute; right: 10px; top: 10px; text-align: right;">
+        {{user_email}}<br />
+        <a href="/logout">Logout</a>
+    </span>
+{% endif %}
+
+<div id="working">Selected images are being stitched.</div>
+
+<div id="content">{% block content %}
+
+    <div id="floating-save-button" style="text-align: center">
+        <button onclick="save_images()">Stitch Selected Images</button>
+        <br />
+        <a href="/display_saved_stitches" target="_blank" style="background-color: white; padding: 8px; display: inline-block; border-radius: 8px;">Display Saved Stitches</a>
+    </div>
+        <br /><br />
+        <form method="post" action="/save" id="save_form">
+            <input type="hidden" id="search_terms" value="{{ search_content }}" />
+        {% for image in images %}
+            <table style="display: inline-block; width: 250px;">
+                <tr>
+                    <td style="text-align: center">
+                        <a href="{{image.links[0].href}}" target="_blank" title="{{image.data[0].description}}">full size</a>
+                        <br />
+                        <label for="image_{{loop.index}}">
+                            <img src="{{image.links[0].href}}" alt="{{image.data[0].description}}"  style="width:250px; max-height:250px; cursor:pointer;" />
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="white-space: nowrap">
+                        <input type="checkbox" value="{{image.links[0].href}}" name="selected_images" id="image_{{loop.index}}" />
+                        <label for="image_{{loop.index}}">
+                            <span title="{{image.data[0].description}}" style="cursor: pointer; display:inline-block; width:220px;  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{image.data[0].description}}</span>
+                        </label>
+                    </td>
+                </tr>
+            </table>
+
+            {% if loop.index % 5 == 0 %}
+            <br /><br />
+            {% endif %}
+
+        {% endfor %}
+
+
+        </form>
+    {% endblock content %}</div>
+<div id="footer">
+    {% block footer %}
+    &copy; Copyright 2023 by <a href="http://github.com/rluceropdx/" target="_blank">{{ name }}</a>.
+    {% endblock footer %}
+</div>
+
+<script type="text/javascript">
+    const search_field = document.getElementById("search_field");
+
+    document.getElementById("search_form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        search_nasa()
+    });
+
+    document.getElementById("save_form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        save_images()
+    });
+
+    search_nasa = () => {
+
+        if (search_field.value.length) {
+            self.location = '/search/' + search_field.value;
+        } else {
+            alert("Please enter something to search.");
+            search_field.focus();
+        }
+    }
+
+    save_images = () => {
+
+        const images = document.querySelectorAll('input[name=selected_images]:checked'); //document.getElementsByName("selected_images");
+        const search_terms = document.getElementById('search_terms').value;
+        let image_sources = [];
+        for (let i=0; i<images.length; i++) {
+            image_sources.push(images[i].value);
+        }
+
+        if (image_sources.length) {
+            const options = {
+                method: 'POST',
+                body: JSON.stringify({
+                    image_sources,
+                    search_terms
+                })
+            };
+            document.getElementById('content').style.opacity = '0.25';
+            document.getElementById('working').style.display = 'block';
+            fetch( '/save', options )
+                .then( response => {
+
+                    if (response.ok) {
+                        window.open('/display_stitch');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 100);
+                    }
+                });
+        } else {
+            alert("Please select some images to stitch.");
+        }
+    }
+</script>
+
+</body>
+</html>

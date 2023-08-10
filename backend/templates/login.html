@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <style>
+        body {
+            font-family: Arial,serif;
+        }
+
+        #footer {
+            position: fixed;
+            bottom: 10px;
+        }
+    </style>
+    <title>NASA Image Stitcher</title>
+</head>
+
+<body>
+    <h1>NASA Image Stitcher</h1>
+
+    <div id="content" style="text-align: center">
+        {% block content %}
+
+            <h2>Login</h2>
+            <form name="login" id="login">
+                <table style="margin: 0 40%;">
+                    <tr>
+                        <td style="text-align: right">Email:</td>
+                        <td><label for="email"></label><input type="text" name="email" id="email" /></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right">Password:</td>
+                        <td><label for="password"></label><input type="password" name="password" id="password" /></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td style="text-align: left"><button type="submit">Login</button></td>
+                    </tr>
+                </table>
+            </form>
+            <div style="padding: 10px; color: red; text-align: center; display: none;" id="login_error">
+                Invalid login, please try again
+            </div>
+
+            <br /><br /><br /><br /><br /><br />
+        <h2>Sign Up</h2>
+        <form name="signup" id="signup">
+            <table style="margin: 0 40%;">
+                <tr>
+                    <td style="text-align: right">Email:</td>
+                    <td><label for="email_signup"></label><input type="text" name="email_signup" id="email_signup" /></td>
+                </tr>
+                <tr>
+                    <td style="text-align: right">Password:</td>
+                    <td><label for="password_signup"></label><input type="password" name="password_signup" id="password_signup" /></td>
+                </tr>
+                <tr>
+                    <td style="text-align: right">Confirm:</td>
+                    <td><label for="password_confirm"></label><input type="password" name="password_confirm" id="password_confirm" /></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td style="text-align: left"><button type="submit">Sign Up</button></td>
+                </tr>
+            </table>
+        </form>
+        <div style="padding: 10px; color: red; text-align: center; display: none;" id="signup_error">
+        </div>
+
+        {% endblock content %}
+    </div>
+
+    <div id="footer">
+        {% block footer %}
+        &copy; Copyright 2023 by <a href="http://github.com/rluceropdx/" target="_blank">{{ name }}</a>.
+        {% endblock footer %}
+    </div>
+
+    <script>
+        const login_form = document.getElementById('login');
+        const email_field = document.getElementById('email');
+        const password_field = document.getElementById('password');
+        const login_error = document.getElementById('login_error');
+
+        const signup_form = document.getElementById('signup');
+        const email_signup = document.getElementById('email_signup');
+        const password_signup = document.getElementById('password_signup');
+        const password_confirm = document.getElementById('password_confirm');
+        const signup_error = document.getElementById('signup_error');
+
+        login_form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            process_login();
+        });
+        email_field.addEventListener("focus", () => {
+            login_error.style.display = 'none';
+        });
+        password_field.addEventListener("focus", () => {
+            login_error.style.display = 'none';
+        });
+
+        signup_form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            process_signup();
+        });
+        email_signup.addEventListener("focus", () => {
+            signup_error.style.display = 'none';
+        });
+        password_signup.addEventListener("focus", () => {
+            signup_error.style.display = 'none';
+        });
+        password_confirm.addEventListener("focus", () => {
+            signup_error.style.display = 'none';
+        });
+
+        process_login = () => {
+            // automatic login once user created
+            fetch_login(email_field.value, password_field.value);
+        }
+
+        process_signup = () => {
+
+            if (email_signup.value.length && password_signup.value.length && password_confirm.value.length) {
+                if (password_signup.value === password_confirm.value) {
+                    const options = {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: email_signup.value,
+                            password: password_signup.value,
+                            confirm_password: password_confirm.value
+                        })
+                    };
+                    fetch('/users', options)
+                        .then(response => {
+                            if (response.ok) {
+                                // automatic login once user created
+                                fetch_login(email_signup.value, password_signup.value);
+                            } else {
+                                show_signup_warning('Server error creating new user, please try again.');
+                            }
+                        });
+                } else {
+                    show_signup_warning('Passwords do not match, please try again.');
+                    password_signup.value = '';
+                    password_confirm.value = '';
+                }
+            } else {
+                show_signup_warning('Please enter email, password, and confirm password.');
+            }
+
+        }
+
+        show_signup_warning = (message) => {
+            signup_error.innerText = message;
+            signup_error.style.display = 'block';
+        }
+
+        fetch_login = (emailAddress, passwordValue) => {
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email : emailAddress,
+                    password : passwordValue
+                })
+            };
+            fetch( '/login', options )
+                .then( response => {
+                    if (response.ok) {
+                        self.location = '/search';
+                    } else {
+                        login_error.style.display = 'block';
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
