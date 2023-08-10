@@ -13,9 +13,9 @@ services:
       - POSTGRES_USER=rustweb
       - POSTGRES_PASSWORD=rustweb
       - POSTGRES_DB=finalproject
-#  backend:
-#    container_name: backend
-#    build: ./backend/
+ backend:
+   container_name: backend
+   build: ./backend/
 
 volumes:
   db:
