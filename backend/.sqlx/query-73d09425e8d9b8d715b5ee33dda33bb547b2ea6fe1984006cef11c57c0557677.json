@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT id, search_terms, created_on FROM user_stitches\n                WHERE user_id in (SELECT id FROM users WHERE email ILIKE $1)\n                ORDER BY created_on DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "search_terms",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "created_on",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "73d09425e8d9b8d715b5ee33dda33bb547b2ea6fe1984006cef11c57c0557677"
+}
