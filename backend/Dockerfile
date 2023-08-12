@@ -6,10 +6,12 @@ COPY Cargo.toml Cargo.lock ./backend/
 
 WORKDIR /app/backend
 ENV SQLX_OFFLINE=1
+ENV RUST_BACKTRACE=1
 RUN cargo build
 
 COPY ./ ./
 ENV SQLX_OFFLINE=1
+ENV RUST_BACKTRACE=1
 RUN cargo build
 
 FROM debian:buster-slim
@@ -22,5 +24,9 @@ WORKDIR /app
 
 COPY --from=builder /app/backend/target/debug/backend ./
 COPY ./templates ./templates
+COPY ./temp ./temp
 ENV SQLX_OFFLINE=1
+ENV RUST_BACKTRACE=1
+
+
 CMD ["/app/backend"]

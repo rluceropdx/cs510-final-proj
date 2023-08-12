@@ -26,7 +26,7 @@ pub async fn run_backend() {
 
     let app = routes::app(new_pool().await).await;
 
-    info!("Listening...");
+    info!("Ready");
 
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
@@ -41,6 +41,8 @@ fn get_host_from_env() -> SocketAddr {
         .expect("Could not find API_PORT in .env file")
         .parse()
         .expect("Can't create a u16 from the given API_PORT string");
+
+    info!("listening on: {:?} {:?}", api_host, api_port);
 
     SocketAddr::from((api_host, api_port))
 }

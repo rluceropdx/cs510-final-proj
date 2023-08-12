@@ -1,8 +1,8 @@
 version: '3'
 
 services:
-  finalproject:
-    container_name: final_project
+  projdb:
+    container_name: proj_db
     image: postgres:15-alpine
     restart: always
     ports:
@@ -13,9 +13,13 @@ services:
       - POSTGRES_USER=rustweb
       - POSTGRES_PASSWORD=rustweb
       - POSTGRES_DB=finalproject
- backend:
-   container_name: backend
-   build: ./backend/
+  projweb:
+    container_name: proj_web
+    build: ./backend/
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
 
 volumes:
   db:
