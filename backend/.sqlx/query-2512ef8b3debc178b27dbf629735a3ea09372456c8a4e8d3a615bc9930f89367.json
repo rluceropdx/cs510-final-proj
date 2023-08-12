@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT email, password, banned FROM users\n                WHERE admin_access IS NULL or admin_access = false\n                ORDER BY email ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "password",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "banned",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "2512ef8b3debc178b27dbf629735a3ea09372456c8a4e8d3a615bc9930f89367"
+}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        body {
+            font-family: Arial,serif;
+        }
+
+        #footer {
+            position: fixed;
+            bottom: 10px;
+        }
+    </style>
+    <title>NASA Image Stitcher</title>
+</head>
+
+<body>
+<h1>Mange Users</h1>
+
+{% if logged_in %}
+<span style="position: absolute; right: 10px; top: 10px; text-align: right;">
+        {{user_email}}
+    </span>
+{% endif %}
+
+<div id="content" style="text-align: center">
+    {% block content %}
+    <table style="margin: 0 auto; width: 50%;">
+        <tr>
+            <td><b>User</b></td>
+            <td><b>Banned?</b></td>
+        </tr>
+        {% for user in user_array %}
+        <tr>
+            <td>{{user.email}}</td>
+            <td>
+                <input type="checkbox" name="banned" value="{{user.email}}" {% if user.banned %} checked {% endif %} />
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br />
+    <hr style="width: 50%" />
+    <br />
+    <button onclick="update_users()">Update Users</button>
+    {% endblock content %}
+</div>
+
+<div id="footer">
+    {% block footer %}
+    &copy; Copyright 2023 by <a href="http://github.com/rluceropdx/" target="_blank">{{ name }}</a>.
+    {% endblock footer %}
+</div>
+
+<script>
+    update_users = () => {
+        const result = confirm("Are you sure you want to update these users?");
+        if (result) {
+
+            let user_list = document.getElementsByName('banned');
+            let checked_users = [];
+
+            for (let i=0; i<user_list.length; i++) {
+                let this_user = user_list[i];
+                if (this_user.checked) {
+                    checked_users.push(this_user.value);
+                }
+            }
+
+            console.log('checked users', checked_users);
+
+            const options = {
+                method: 'POST',
+                body: JSON.stringify({
+                    checked_users
+                })
+            };
+            console.log('options', options)
+            fetch('/update_users', options)
+                .then(response => {
+                    console.log('response', response)
+                    if (response.ok) {
+                        self.location = '/manage_users';
+                    }
+                });
+        }
+    }
+</script>
+
+</body>
+</html>

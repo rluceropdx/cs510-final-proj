@@ -13,7 +13,7 @@
 
         #floating-save-button {
             position: fixed;
-            top: 60px; /* Adjust this value to set the distance from the bottom */
+            top: 75px; /* Adjust this value to set the distance from the bottom */
             right: 10px; /* Adjust this value to set the distance from the right */
             z-index: 9999; /* Make sure the button stays above other elements */
         }
@@ -61,12 +61,17 @@
     <button style="font-size: 25px">Search</button>
 </form>
 
-{% if logged_in %}
 <span style="position: absolute; right: 10px; top: 10px; text-align: right;">
+    {% if logged_in %}
         {{user_email}}<br />
         <a href="/logout">Logout</a>
-    </span>
-{% endif %}
+    {% endif %}
+
+    {%if is_admin %}
+        <br /><a href="/manage_users" target="_blank">Manage Users</a>
+    {% endif %}
+</span>
+
 
 <div id="working">Selected images are being stitched.</div>
 

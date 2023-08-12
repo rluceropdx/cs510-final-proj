@@ -13,6 +13,7 @@ use serde_derive::{Deserialize, Serialize};
 pub struct User {
     pub email: String,
     pub password: String,
+    pub banned: Option<bool>
 }
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]

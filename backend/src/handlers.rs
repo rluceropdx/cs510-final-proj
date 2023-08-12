@@ -99,24 +99,58 @@ pub async fn display_user_stitched_image(
         .unwrap()
 }
 
+pub async fn manage_users(
+    claims: Claims,
+    State(proj_database): State<Store>,
+) -> Html<String> {
+
+    let is_admin: bool = proj_database.check_admin_access(&claims.email).await;
+
+    if is_admin {
+        let user_array: Vec<User> = proj_database.get_users().await;
+
+        let mut context = Context::new();
+        context.insert("user_array", &user_array);
+        context = prepare_context(context, &claims.email, is_admin);
+
+        let rendered = TEMPLATES
+            .render("manage_users.html", &context)
+            .unwrap_or_else(|err| {
+                error!("Template rendering error: {}", err);
+                panic!()
+            });
+        return Html(rendered);
+    }
+
+    Html("".to_string())
+}
+
+pub async fn update_users(
+    claims: Claims,
+    State(proj_database): State<Store>,
+    post_params: String,
+) -> Html<String> {
+
+    if proj_database.check_admin_access(&claims.email).await {
+        let params_str: Value = serde_json::from_str(&post_params).unwrap();
+        let checked_users: Vec<String> = serde_json::from_str(&params_str.get("checked_users").unwrap().to_string()).unwrap();
+        let _ = proj_database.ban_user(&claims.email, checked_users).await;
+    }
+
+    Html("".to_string())
+}
+
 pub async fn display_saved_stitches(
     claims: Claims,
     State(proj_database): State<Store>,
 ) -> Html<String> {
 
     let data_array: Vec<UserStitches> = proj_database.get_user_stitches_data(&claims.email).await;
+    let is_admin: bool = proj_database.check_admin_access(&claims.email).await;
 
     let mut context = Context::new();
-    context.insert("name", "Farani Lucero");
     context.insert("data_array", &data_array);
-
-    if claims.email.len() > 0 {
-        context.insert("logged_in", &true);
-        context.insert("user_email", &claims.email);
-    } else {
-        context.insert("logged_in", &false);
-        context.insert("user_email", "");
-    }
+    context = prepare_context(context, &claims.email, is_admin);
 
     let rendered = TEMPLATES
         .render("user_stitches.html", &context)
@@ -234,26 +268,41 @@ pub async fn search (
         json_response = proj_database.get_cache("nasa", &url).await.unwrap().parse().unwrap();
     }
 
-    parse_nasa_response(&json_response, &topic, &cache_exists, &claims).await
+    let is_admin: bool = proj_database.check_admin_access(&claims.email).await;
+
+    parse_nasa_response(&json_response, &topic, &cache_exists, &claims, is_admin).await
 }
 
-async fn parse_nasa_response(json_response: &Value, topic: &str, cache_exists: &bool, claims: &Claims) -> Html<String> {
-    let nasa_images: NasaImages = serde_json::from_str(&json_response.to_string()).unwrap();
-    let image_data: Vec<Item> = nasa_images.collection.items;
-
-    let mut context = Context::new();
+fn prepare_context(mut context: Context, email: &str, is_admin: bool) -> Context {
     context.insert("name", "Farani Lucero");
-    context.insert("images", &image_data);
-    context.insert("search_content", &topic);
-    context.insert("cache_exists", cache_exists);
 
-    if claims.email.len() > 0 {
+    if is_admin {
+        context.insert("is_admin", &true);
+    } else {
+        context.insert("is_admin", &false);
+    }
+
+    if email.len() > 0 {
         context.insert("logged_in", &true);
-        context.insert("user_email", &claims.email);
+        context.insert("user_email", &email);
     } else {
         context.insert("logged_in", &false);
         context.insert("user_email", "");
     }
+
+    return context;
+}
+
+async fn parse_nasa_response(json_response: &Value, topic: &str, cache_exists: &bool, claims: &Claims, is_admin: bool) -> Html<String> {
+    let nasa_images: NasaImages = serde_json::from_str(&json_response.to_string()).unwrap();
+    let image_data: Vec<Item> = nasa_images.collection.items;
+
+
+    let mut context = Context::new();
+    context.insert("images", &image_data);
+    context.insert("search_content", &topic);
+    context.insert("cache_exists", cache_exists);
+    context = prepare_context(context, &claims.email, is_admin);
 
     let rendered = TEMPLATES
         .render("index.html", &context)
@@ -358,6 +407,10 @@ pub async fn validate_login(
 
     let existing_user = proj_database.get_user(&creds.email).await?;
 
+    if existing_user.banned.unwrap() {
+        return Err(AppError::BannedUser);
+    }
+
     let is_password_correct =
         match argon2::verify_encoded(&*existing_user.password, creds.password.as_bytes()) {
             Ok(result) => result,
@@ -389,7 +442,7 @@ pub async fn validate_login(
         .unwrap();
 
     let headers = response.headers_mut();
-    headers.insert(LOCATION, HeaderValue::from_static("/"));
+    headers.insert(LOCATION, HeaderValue::from_static("/search"));
     headers.insert(SET_COOKIE, HeaderValue::from_str(&cookie.to_string()).unwrap());
 
     Ok(response)

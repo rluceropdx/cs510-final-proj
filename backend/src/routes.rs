@@ -28,6 +28,8 @@ pub async fn app(pool: PgPool) -> Router {
         .route("/delete_stitch/:id", post(delete_stitch))
         .route("/save", post(save_images))
         .route("/users", post(register_user))
+        .route("/manage_users", get(manage_users))
+        .route("/update_users", post(update_users))
         .route("/logout", get(logout))
         .route("/login", post(validate_login))
         .route("/protected", get(protected))

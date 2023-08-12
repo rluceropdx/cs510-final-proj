@@ -10,6 +10,7 @@ pub enum AppError {
     Database(Error),
     MissingCredentials,
     InvalidPassword,
+    BannedUser,
     UserDoesNotExist,
     UserAlreadyExists,
     InvalidToken,
@@ -39,6 +40,7 @@ impl IntoResponse for AppError {
             AppError::UserAlreadyExists =>  (StatusCode::UNAUTHORIZED, "Email address already exists in the system".to_string()),
             AppError::InvalidToken =>  (StatusCode::UNAUTHORIZED, "Invalid Token".to_string()),
             AppError::InvalidPassword => (StatusCode::UNAUTHORIZED, "Invalid Password".to_string()),
+            AppError::BannedUser => (StatusCode::FORBIDDEN, "Banned User Account".to_string()),
             AppError::InternalServerError =>  (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error".to_string()),
         };
 

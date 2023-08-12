@@ -140,7 +140,11 @@
                                 // automatic login once user created
                                 fetch_login(email_signup.value, password_signup.value);
                             } else {
-                                show_signup_warning('Server error creating new user, please try again.');
+                                let message = "Server error creating new user, please try again.";
+                                if (response.status === 401) {
+                                    message += "\n(" + email_signup.value + ") may already exist.";
+                                }
+                                show_signup_warning(message);
                             }
                         });
                 } else {
@@ -159,6 +163,11 @@
             signup_error.style.display = 'block';
         }
 
+        show_login_warning = (message) => {
+            login_error.innerText = message.length ? message : "Invalid login, please try again";
+            login_error.style.display = 'block';
+        }
+
         fetch_login = (emailAddress, passwordValue) => {
             const options = {
                 method: 'POST',
@@ -172,10 +181,12 @@
             };
             fetch( '/login', options )
                 .then( response => {
+                    console.log('response', response)
                     if (response.ok) {
                         self.location = '/search';
                     } else {
-                        login_error.style.display = 'block';
+                        let message = response.status === 403 ? "(" + emailAddress + ") has been banned,\nplease contact administrator" : "";
+                        show_login_warning(message);
                     }
                 });
         }

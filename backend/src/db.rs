@@ -41,13 +41,12 @@ impl Store {
     pub async fn get_user(&self, email: &str) -> Result<User, AppError> {
         let user = sqlx::query_as::<_, User>(
             r#"
-                SELECT email, password FROM users WHERE email = $1
+                SELECT email, password, banned FROM users WHERE email ILIKE $1
             "#,
         )
             .bind(email)
             .fetch_one(&self.conn_pool)
             .await?;
-
         Ok(user)
     }
 
@@ -136,6 +135,43 @@ impl Store {
         res.json_results
     }
 
+    pub async fn get_users(&self) -> Vec<User> {
+        let res = sqlx::query!(
+            r#"
+                SELECT email, password, banned FROM users
+                WHERE admin_access IS NULL or admin_access = false
+                ORDER BY email ASC
+            "#
+        )
+            .fetch_all(&self.conn_pool)
+            .await
+            .unwrap();
+
+        res.into_iter().map(|row | User {
+            email: row.email,
+            password: "".to_string(),
+            banned: Option::from(row.banned)
+        }).collect()
+    }
+
+    pub async fn check_admin_access(&self, email: &str) -> bool {
+        let res = sqlx::query!(
+            r#"
+                SELECT id FROM users
+                WHERE email ILIKE $1 AND admin_access = true
+            "#,
+            email
+        )
+            .fetch_all(&self.conn_pool)
+            .await
+            .unwrap();
+
+        if res.len() > 0 {
+            return true;
+        }
+        false
+    }
+
     pub async fn has_cache(&self, api_type: &str, url: &str) -> bool {
         let res = sqlx::query!(
             r#"
@@ -172,6 +208,33 @@ impl Store {
 
         Ok(())
     }
+
+    pub async fn ban_user(&self, admin_email: &str, user_emails: Vec<String>) -> Result<(), sqlx::Error> {
+
+        if self.check_admin_access(admin_email).await {
+            // reset banned access
+            let _res = sqlx::query(
+                r#"
+                UPDATE users SET banned = FALSE
+               "#
+            ).execute(&self.conn_pool).await;
+
+
+             for email in &user_emails {
+                let _res = sqlx::query(
+                    r#"
+                        UPDATE users SET banned = TRUE where email ILIKE $1
+                       "#
+                )
+                    .bind(&email)
+                    .execute(&self.conn_pool).await;
+
+            }
+        }
+
+        Ok(())
+    }
+
 
     pub async fn save_user_stitches(&self, image_data: Vec<u8>, search_terms: &str, user_email: &str) -> Result<(), sqlx::Error> {
         let query_user = sqlx::query!(
