@@ -5,7 +5,7 @@ Student: Farani Lucero (rlucero@pdx.edu)
 
 PROJECT NAME: Stochastic Cosmos (or Random Universe)
 HOSTED AT: http://5.78.104.199 (hetzner.com)
-ADMIN ACCOUNT: (username: admin@admin.com; password: pass1234) 
+ADMIN ACCOUNT: (username: admin@admin.com) 
 GIT REPO: https://github.com/rluceropdx/cs510-final-proj
 
 
