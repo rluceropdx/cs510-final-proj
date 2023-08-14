@@ -52,7 +52,7 @@ impl Store {
 
     pub async fn create_user(&self, user: UserSignup) -> Result<Json<Value>, AppError> {
         // TODO: Encrypt/bcrypt user passwords
-        let result = sqlx::query("INSERT INTO users(email, password) values ($1, $2)")
+        let result = sqlx::query("INSERT INTO users(email, password, banned) values ($1, $2, false)")
             .bind(&user.email)
             .bind(&user.password)
             .execute(&self.conn_pool)
