@@ -1,0 +1,64 @@
+version: '3'
+
+services:
+  projdb:
+    container_name: projdb
+    image: postgres:15-alpine
+    #    ports:
+    #      - "5432:5432"
+    restart: always
+    volumes:
+      - db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=rustweb
+      - POSTGRES_PASSWORD=rustweb
+      - POSTGRES_DB=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --dbname=postgres --username=rustweb"]
+      interval: 10s
+      timeout: 5s
+      retries: 25
+
+  nginx:
+    container_name: nginx
+    restart: unless-stopped
+    image: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./robocert/wait-for-robocert.sh:/wait-for-robocert.sh # Mount the wait script
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./robocert/letsencrypt:/etc/letsencrypt
+      - ./robocert/dnsrobocert:/etc/dnsrobocert
+    depends_on:
+      - robocert
+    command: [ "/bin/sh", "-c", "chmod +x /wait-for-robocert.sh && /wait-for-robocert.sh" ] # Override the default command
+
+  projweb:
+    container_name: projweb
+    #    ports:
+    #      - "3000:3000"
+    build: ./backend/
+    restart: always
+    env_file:
+      - ./backend/.env
+    depends_on:
+      projdb:
+        condition: service_healthy
+
+  robocert:
+    image: adferrand/dnsrobocert
+    container_name: robocert
+    volumes:
+      - ./robocert/letsencrypt:/etc/letsencrypt
+      - ./robocert/dnsrobocert:/etc/dnsrobocert
+    environment:
+      - VERSION=latest
+    restart: always
+
+
+volumes:
+  db:
+    driver: local
+
