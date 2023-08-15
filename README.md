@@ -3,7 +3,7 @@
 Portland State University - CS510 Rust Web Development  
 Student: Farani Lucero (rlucero@pdx.edu)  
 PROJECT NAME: Stochastic Cosmos (or Random Universe)  
-HOSTED AT: http://5.78.104.199 (hetzner.com)  
+HOSTED AT: https://5.78.104.199 (hetzner.com)  
 ADMIN ACCOUNT: (username: admin@admin.com)  
 GIT REPO: https://github.com/rluceropdx/cs510-final-proj  
 
@@ -41,7 +41,7 @@ Almost all the necessary project objectives worked.
   - keyword used to search
   - full URL used to query NASA Image Library API
   - the entire json response returned from the API
- - publishing project to Hetzer cloud servers using Docker images (http://5.78.104.199)
+ - publishing project to Hetzer cloud servers using Docker images (https://5.78.104.199)
 
 ***
 
